@@ -1,0 +1,55 @@
+# How has the share of communications and computer services, insurance and financial services, transport services, and travel services in Egypt’s total service imports evolved between 1977 and 2023?
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+
+# Folders
+data_raw_folder = "data_raw/"
+data_clean_folder = "data_clean/"
+figures_folder = "figures/"
+
+# Load CSV
+filename = "trade_egy_filtered.csv"  # Filtered dataset with only relevant rows
+df = pd.read_csv(os.path.join(data_raw_folder, filename))
+
+# Keep only needed columns
+df = df[["Year", "Indicator Name", "Value"]]
+
+# Convert Year and Value to numeric, drop invalid rows
+df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
+df["Value"] = pd.to_numeric(df["Value"], errors="coerce")
+df = df.dropna(subset=["Year", "Value"])
+
+# Pivot indicators into separate columns
+df_pivot = df.pivot(index="Year", columns="Indicator Name", values="Value").reset_index()
+df_pivot = df_pivot.sort_values("Year")
+
+print("Pivoted Egypt dataset:")
+display(df_pivot)
+
+# Interpolate missing values for smooth plotting (optional)
+df_plot = df_pivot.interpolate(method='linear')
+
+# Plot the indicators
+plt.figure(figsize=(10,6))
+plt.plot(df_plot["Year"], df_plot["Communications, computer, etc. (% of service imports, BoP)"], 
+         marker='o', linestyle='-', label="Communications, computer, etc. (% of service imports, BoP)")
+plt.plot(df_plot["Year"], df_plot["Insurance and financial services (% of service imports, BoP)"], 
+         marker='o', linestyle='-', label="Insurance and financial services (% of service imports, BoP)")
+plt.plot(df_plot["Year"], df_plot["Transport services (% of service imports, BoP)"], 
+         marker='o', linestyle='-', label="Transport services (% of service imports, BoP)")
+plt.plot(df_plot["Year"], df_plot["Travel services (% of service imports, BoP)"], 
+         marker='o', linestyle='-', label="Travel services (% of service imports, BoP)")
+
+plt.title("Egypt: Communications, computer, etc. vs Insurance and financial services vs Transport services vs Travel services as shares of service imports (%) (1977-2023)")
+plt.xlabel("Year")
+plt.ylabel("Percentage")
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(os.path.join(figures_folder, "egypt_comm_comp_etc_vs_insurance_and_financial_services_vs_transport_services_vs_travel_services_as_shares_of_service_imports.png"))
+plt.show()
+
+# Save cleaned CSV
+df_pivot.to_csv(os.path.join(data_clean_folder, "egypt_comm_comp_etc_vs_insurance_and_financial_services_vs_transport_services_vs_travel_services_as_shares_of_service_imports"), index=False)
